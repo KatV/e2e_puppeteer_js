@@ -13,79 +13,99 @@ const user = {
 const isDebugging = () => {
     let debugging_mode = {
         headless: false,
-        slowMo: 250,
+        slowMo: 25,
         devtools: true
     }
-    return process.env.NODE_ENV === 'debug' ? debugging_mode : {};
+    return process.env.NODE_ENV === 'debug' ? debugging_mode : {}
 }
 
 let browser
 let page
-beforeAll( async () => {
+let logs = []
+let errors = []
+beforeAll(async () => {
     browser = await puppeteer.launch(isDebugging())
     page = await browser.newPage()
-    await page.goto('http://localhost:3000')
-    page.setViewport({ width: 500, height: 2400 })
+    await page.setRequestInterception(true)
+    page.on('request', interceptedRequest => {
+        if (interceptedRequest.url.includes('swapi')) {
+            interceptedRequest.abort()
+        } else {
+            interceptedRequest.continue()
+        }
+    })
+    page.on('console', c => {
+        logs.push(c.text)
+    })
+    page.on('pageerror', e => errors.push(e.text))
+    await page.goto('http://localhost:3000/')
+    await page.emulate(iPhone)
 })
 
 describe('on page load ', () => {
     test('h1 loads correctly', async () => {
-
-        const html = await page.$eval('[data-testid="h1"]', e =>
-        e.innerHTML)
+        const html = await page.$eval('[data-testid="h1"]', e => e.innerHTML)
 
         expect(html).toBe('Welcome to React')
 
     }, 16000)
 
     test('nav loads correctly', async () => {
-
         const navbar = await page.$eval('[data-testid="navbar"]', el => el ? true : false)
         const listItems = await page.$$('[data-testid="navBarLi"]')
 
         expect(navbar).toBe(true)
+        if (listItems.length !== 4)
+            await page.pdf({path: 'screenshot.png'})
         expect(listItems.length).toBe(4)
     })
-
     describe('login form', () => {
         test('fills out form and submits', async () => {
 
             await page.setCookie({ name: 'JWT', value: 'kdkdkddf' })
 
-            const page2 = await browser.newPage()
-            await page2.emulate(iPhone)
-            await page2.goto('http://localhost:3000/')
+            const firstNameEl = await page.$('[data-testid="firstName"]')
+            const lastNameEl = await page.$('[data-testid="lastName"]')
+            const emaildEl = await page.$('[data-testid="email"]')
+            const passwordEl = await page.$('[data-testid="password"]')
+            const submitEl = await page.$('[data-testid="submit"]')
 
-            const firstName = await page2.$('[data-testid="firstName"]')
-            const lastName = await page2.$('[data-testid="lastName"]')
-            const email = await page2.$('[data-testid="email"]')
-            const password = await page2.$('[data-testid="password"]')
-            const submit = await page2.$('[data-testid="submit"]')
+            await firstNameEl.tap()
+            await page.type('[data-testid="firstName"]', user.firstName)
 
-            await firstName.tap()
-            await page2.type('[data-testid="firstName"]', user.firstName)
+            await lastNameEl.tap()
+            await page.type('[data-testid="lastName"]', user.lastName)
 
-            await lastName.tap()
-            await page2.type('[data-testid="lastName"]', user.lastName)
+            await emaildEl.tap()
+            await page.type('[data-testid="email"]', user.email)
 
-            await email.tap()
-            await page2.type('[data-testid="email"]', user.email)
+            await passwordEl.tap()
+            await page.type('[data-testid="password"]', user.password)
 
-            await password.tap()
-            await page2.type('[data-testid="password"]', user.password)
+            await submitEl.tap()
 
-            await submit.tap()
-
-            await page2.waitForSelector('[data-testid="success"]')
+            await page.waitForSelector('[data-testid="success"]')
         }, 16000)
-        test('sets firstName cookie', async () => {
+        test.skip('sets firstName cookie', async () => {
             const cookies = await page.cookies()
             const firstNameCookie = cookies.find(c => c.name === 'firstName' && c.value === user.firstName)
 
             expect(firstNameCookie).not.toBeUndefined()
         })
     })
+    test.skip('does not have console logs', () => {
+        const newLogs = logs.filter( s => s !== '%cDownload the React DevTools for a better development experience: https://fb.me/react-devtools font-weight:bold')
+
+        expect(newLogs.length).toBe(0)
     })
+    test.skip('does not have exceptions', () => {
+        expect(errors.length).toBe(0)
+    })
+    test('fails to fetch starWars endpoint', async () => {
+        const h3 = await page.$eval('[data-testid="starWars"]', e => e.innerHTML)
+        expect(h3).toBe('Something went wrong')
+    })
+})
 
 afterAll(() => {
     if (isDebugging()) {
