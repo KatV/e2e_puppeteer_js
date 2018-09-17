@@ -1,7 +1,7 @@
 pipeline {
   agent any
   options {
-    buildDiscardee(logRotator(numToKeepStr: '5'))
+    buildDiscarded(logRotator(numToKeepStr: '5'))
   }
   tools {
     nodejs 'node-latest'
