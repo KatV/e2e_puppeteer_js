@@ -1,0 +1,7 @@
+version: '3.4'
+
+services:
+  react_nginx:
+    image: dockerkat220/e2e_puppeteer_js:build-latest
+    ports:
+      - 81:80
