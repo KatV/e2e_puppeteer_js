@@ -7,7 +7,7 @@ pipeline {
     nodejs 'node-latest'
   }
   parameters {
-    string(name: 'IMAGE_REPO_NAME', defaultValue: 'KatV/e2e_puppeteer_js', description: '')
+    string(name: 'IMAGE_REPO_NAME', defaultValue: 'dockerkat220/e2e_puppeteer_js', description: '')
     string(name: 'LATEST_BUILD_TAG', defaultValue: 'build-latest', description: '')
     string(name: 'DOCKER_COMPOSE_FILENAME', defaultValue: 'docker-compose.yml', description: '')
     string(name: 'DOCKER_STACK_NAME', defaultValue: 'react_stack', description: '')
