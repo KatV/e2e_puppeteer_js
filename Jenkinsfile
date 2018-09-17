@@ -28,14 +28,14 @@ pipeline {
     stage('docker build') {
       environment {
         COMMIT_TAG = sh(returnStdout: true, script: 'git rev-parse HEAD').trim().take(7)
-        BUILD_IMAGE_REPO_TAG = "${patams.IMAGE_REPO_NAME}:${env.BUILD_TAG}"
+        BUILD_IMAGE_REPO_TAG = "${params.IMAGE_REPO_NAME}:${env.BUILD_TAG}"
       }
       steps {
         sh "docker build . -t $BUILD_IMAGE_REPO_TAG"
-        sh "docker tag $BUILD_IMAGE_REPO_TAG ${patams.IMAGE_REPO_NAME}:$COMMIT_TAG"
-        sh "docker tag $BUILD_IMAGE_REPO_TAG ${patams.IMAGE_REPO_NAME}:${readJSON(file: 'package.json').version}"
-        sh "docker tag $BUILD_IMAGE_REPO_TAG ${patams.IMAGE_REPO_NAME}:${params.LATEST_BUILD_TAG}"
-        sh "docker tag $BUILD_IMAGE_REPO_TAG ${patams.IMAGE_REPO_NAME}:$BRANCH_NAME-latest"
+        sh "docker tag $BUILD_IMAGE_REPO_TAG ${params.IMAGE_REPO_NAME}:$COMMIT_TAG"
+        sh "docker tag $BUILD_IMAGE_REPO_TAG ${params.IMAGE_REPO_NAME}:${readJSON(file: 'package.json').version}"
+        sh "docker tag $BUILD_IMAGE_REPO_TAG ${params.IMAGE_REPO_NAME}:${params.LATEST_BUILD_TAG}"
+        sh "docker tag $BUILD_IMAGE_REPO_TAG ${params.IMAGE_REPO_NAME}:$BRANCH_NAME-latest"
       }
     }
     stage('docker push') {
@@ -46,14 +46,14 @@ pipeline {
       }
       environment {
         COMMIT_TAG = sh(returnStdout: true, script: 'git rev-parse HEAD').trim().take(7)
-        BUILD_IMAGE_REPO_TAG = "${patams.IMAGE_REPO_NAME}:${env.BUILD_TAG}"
+        BUILD_IMAGE_REPO_TAG = "${params.IMAGE_REPO_NAME}:${env.BUILD_TAG}"
       }
       steps {
         sh "docker push $BUILD_IMAGE_REPO_TAG"
-        sh "docker push ${patams.IMAGE_REPO_NAME}:$COMMIT_TAG"
-        sh "docker push ${patams.IMAGE_REPO_NAME}:${readJSON(file: 'package.json').version}"
-        sh "docker push ${patams.IMAGE_REPO_NAME}:${params.LATEST_BUILD_TAG}"
-        sh "docker push ${patams.IMAGE_REPO_NAME}:$BRANCH_NAME-latest"
+        sh "docker push ${params.IMAGE_REPO_NAME}:$COMMIT_TAG"
+        sh "docker push ${params.IMAGE_REPO_NAME}:${readJSON(file: 'package.json').version}"
+        sh "docker push ${params.IMAGE_REPO_NAME}:${params.LATEST_BUILD_TAG}"
+        sh "docker push ${params.IMAGE_REPO_NAME}:$BRANCH_NAME-latest"
       }
     }
     stage('Remove Previous Stack') {
