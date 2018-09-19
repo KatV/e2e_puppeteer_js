@@ -28,7 +28,7 @@ pipeline {
         }
       }
       steps {
-        sh "npm test"
+        sh "set NODE_ENV=debug && npm test"
       }
     }    
     stage('npm build') {
